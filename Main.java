@@ -2,12 +2,9 @@ package assignment4;
 /* CRITTERS Main.java
  * EE422C Project 4 submission by
  * Replace <...> with your actual data.
- * <Student1 Name>
- * <Student1 EID>
- * <Student1 5-digit Unique No.>
- * <Student2 Name>
- * <Student2 EID>
- * <Student2 5-digit Unique No.>
+ * David Yu
+ * dy3834
+ * 15460
  * Slip days used: <0>
  * Fall 2016
  */
@@ -70,7 +67,69 @@ public class Main {
         /* Do not alter the code above for your submission. */
         /* Write your code below. */
         
-        // System.out.println("GLHF");
+        System.out.println("GLHF");
+        
+        // TODO: remove in Stage 3
+        // Create 100 Algae and 25 Craig
+        try {
+        	for (int i = 0; i < 20; i++) {
+        		Critter.makeCritter("assignment4.Algae");
+        	}
+        	for (int i = 0; i < 5; i++) {
+        		Critter.makeCritter("assignment4.Craig");
+        	}
+        } catch (InvalidCritterException e) {
+        	System.out.println("Oops, something went wrong");
+        }
+        
+        while (true) {
+        	String rawCmd = kb.nextLine();
+        	String[] input = rawCmd.trim().split("\\s+");
+        	
+        	// "quit" command terminates simulation
+        	if (input[0].equals("quit")) {
+        		break;
+        	}
+        	
+        	// "show" command displays 2D grid
+        	else if (input[0].equals("show")) {
+        		Critter.displayWorld();
+        	}
+        	
+        	// "step <count>" command performs specified number of world time steps
+        	// TODO: take care of <count> argument in Stage 2
+        	else if (input[0].equals("step")) {
+        		Critter.worldTimeStep();
+        	}
+        	
+        	// TODO: "seed" is Stage 2
+        	else if (input[0].equals("seed")) {
+        		
+        	}
+        	
+        	// TODO: "make" is Stage 3. For 1 and 2, main() makes 100 Algae and 25 Craigs.
+        	else if (input[0].equals("make")) {
+        		
+        	}
+        	
+        	// TODO: "stats" is Stage 3
+        	else if (input[0].equals("stats")) {
+        		
+        	}
+        	
+        	// TODO: Invalid command handling
+        	else {
+        		break;
+        	}
+        }
+
+        
+        /*
+        for (int i = 0; i < 10; i++) {
+            Critter.displayWorld();
+            Critter.worldTimeStep();
+        }
+        */
         
         /* Write your code above */
         System.out.flush();

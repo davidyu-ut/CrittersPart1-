@@ -22,7 +22,7 @@ public class Craig extends Critter {
 	}
 	
 	public boolean fight(String not_used) { return true; }
-
+	
 	@Override
 	public void doTimeStep() {
 		/* take one step forward */

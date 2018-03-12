@@ -2,12 +2,9 @@ package assignment4;
 /* CRITTERS Critter.java
  * EE422C Project 4 submission by
  * Replace <...> with your actual data.
- * <Student1 Name>
- * <Student1 EID>
- * <Student1 5-digit Unique No.>
- * <Student2 Name>
- * <Student2 EID>
- * <Student2 5-digit Unique No.>
+ * David Yu
+ * dy3834
+ * 15460
  * Slip days used: <0>
  * Fall 2016
  */
@@ -50,11 +47,117 @@ public abstract class Critter {
 	private int x_coord;
 	private int y_coord;
 	
+	private void readjust() {
+		// Right wraps around to left
+		if (this.x_coord > (Params.world_width - 1)) {
+			this.x_coord = this.x_coord - Params.world_width;
+		}
+		// Left wraps around to right
+		if (this.x_coord < 0) {
+			this.x_coord = Params.world_width + this.x_coord;
+		}
+		// Up wraps around to down
+		if (this.y_coord < 0) {
+			this.y_coord = Params.world_height + this.y_coord;
+		}
+		// Down wraps around to up
+		if (this.y_coord > (Params.world_height - 1)) {
+			this.y_coord = this.y_coord - Params.world_height;
+		}
+	}
+	
 	protected final void walk(int direction) {
+		// Critter kills himself trying to walk (not enough energy)
+		// TODO: check it <= is correct, or maybe just < and add = somewhere else
+		if ((this.energy - Params.walk_energy_cost) <= 0) {
+			this.energy = 0;
+			population.remove(this);	// remove from population
+			return;
+		}
+		// Critter successfully walks
+		else {
+			this.energy -= Params.walk_energy_cost;		// Update energy cost
+			switch (direction) {
+			case 0:		// Move east
+				this.x_coord++;
+				break;
+			case 1: 	// Move north-east
+				this.x_coord++;
+				this.y_coord--;
+				break;
+			case 2:		// Move north
+				this.y_coord--;
+				break;
+			case 3:		// Move north-west
+				this.x_coord--;
+				this.y_coord--;
+				break;
+			case 4:		// Move west
+				this.x_coord--;
+				break;
+			case 5:		// Move south-west
+				this.x_coord--;
+				this.y_coord++;
+				break;
+			case 6:		// Move south
+				this.y_coord++;
+				break;
+			case 7:		// south-east
+				this.x_coord++;
+				this.y_coord++;
+				break;
+			default:
+				break;
+			}
+			
+			readjust();		// If critter is out of bounds, wrap around grid
+		}
 	}
 	
 	protected final void run(int direction) {
-		
+		// Critter kills himself trying to run (not enough energy)
+		if ((this.energy - Params.run_energy_cost) < 0) {
+			this.energy = 0;
+			return;
+		}
+		// Critter successfully runs
+		else {
+			this.energy -= Params.run_energy_cost;		// Update energy cost
+			switch (direction) {
+			case 0:		// Move east
+				this.x_coord += 2;
+				break;
+			case 1: 	// Move north-east
+				this.x_coord += 2;
+				this.y_coord -= 2;
+				break;
+			case 2:		// Move north
+				this.y_coord -= 2;
+				break;
+			case 3:		// Move north-west
+				this.x_coord -= 2;
+				this.y_coord -= 2;
+				break;
+			case 4:		// Move west
+				this.x_coord -= 2;
+				break;
+			case 5:		// Move south-west
+				this.x_coord -= 2;
+				this.y_coord += 2;
+				break;
+			case 6:		// Move south
+				this.y_coord += 2;
+				break;
+			case 7:		// south-east
+				this.x_coord += 2;
+				this.y_coord += 2;
+				break;
+			default:
+				break;
+			}
+			
+			readjust();		// If critter is out of bounds, wrap around grid
+		}
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
@@ -70,10 +173,22 @@ public abstract class Critter {
 	 * (Java weirdness: Exception throwing does not work properly if the parameter has lower-case instead of
 	 * upper. For example, if craig is supplied instead of Craig, an error is thrown instead of
 	 * an Exception.)
-	 * @param critter_class_name
-	 * @throws InvalidCritterException
+	 * @param critter_class_name is the name of the Critter class
+	 * @throws InvalidCritterException if specified an unknown Critter class
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
+		try {
+			Class critter = Class.forName(critter_class_name);
+			Critter newCritter = (Critter)critter.newInstance();
+			population.add(newCritter);	// Add newly created critter to population
+		
+			newCritter.x_coord = getRandomInt(Params.world_width - 1);	// Random x-coor
+			newCritter.y_coord = getRandomInt(Params.world_height - 1);	// Random y-coor
+			newCritter.energy = Params.start_energy;	// Initial energy
+			
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+			throw new InvalidCritterException(critter_class_name);
+		}
 	}
 	
 	/**
@@ -173,9 +288,49 @@ public abstract class Critter {
 	
 	public static void worldTimeStep() {
 		// Complete this method.
+		for (Critter currCritter : population) {
+			currCritter.doTimeStep();
+		}
 	}
 	
 	public static void displayWorld() {
 		// Complete this method.
+		
+		// Initialize 2D grid with single space " "
+		String[][] grid = new String[Params.world_height][Params.world_width]; 
+		for (int row = 0; row < Params.world_height; row++) {
+			for (int col = 0; col < Params.world_width; col++) {
+				grid[row][col] = " ";
+			}
+		}
+		
+		// Place Critters on grid
+		for (Critter currCritter : population) {
+			// TODO: check if this access is correct
+			grid[currCritter.y_coord][currCritter.x_coord] = currCritter.toString();
+		}
+		
+		// Print top border
+		System.out.print("+");
+		for (int col = 0; col < Params.world_width; col++) {
+			System.out.print("-");
+		}
+		System.out.println("+");
+		
+		// Print grid
+		for (int row = 0; row < Params.world_height; row++) {
+			System.out.print("|");
+			for (int col = 0; col < Params.world_width; col++) {
+				System.out.print(grid[row][col]);
+			}
+			System.out.println("|");
+		}
+		
+		// Print bottom border
+		System.out.print("+");
+		for (int col = 0; col < Params.world_width; col++) {
+			System.out.print("-");
+		}
+		System.out.println("+");
 	}
 }
