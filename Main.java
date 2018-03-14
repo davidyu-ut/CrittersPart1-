@@ -72,10 +72,12 @@ public class Main {
         // TODO: remove in Stage 3
         // Create 100 Algae and 25 Craig
         try {
+        	/*
         	for (int i = 0; i < 20; i++) {
         		Critter.makeCritter("assignment4.Algae");
         	}
-        	for (int i = 0; i < 5; i++) {
+        	*/
+        	for (int i = 0; i < 50; i++) {
         		Critter.makeCritter("assignment4.Craig");
         	}
         } catch (InvalidCritterException e) {

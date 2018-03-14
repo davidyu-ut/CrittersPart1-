@@ -10,7 +10,9 @@ package assignment4;
  */
 
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 /* see the PDF for descriptions of the methods and fields in this class
  * you may add fields, methods or inner classes to Critter ONLY if you make your additions private
@@ -279,6 +281,14 @@ public abstract class Critter {
 		}
 	}
 
+	private static boolean samePosition(Critter crit1, Critter crit2) {
+		if ((crit1.x_coord == crit2.x_coord) && (crit1.y_coord == crit2.y_coord)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	/**
 	 * Clear the world of all critters, dead and alive
 	 */
@@ -288,9 +298,128 @@ public abstract class Critter {
 	
 	public static void worldTimeStep() {
 		// Complete this method.
+		
+		//TODO: increment (aka keep track of) timestep??
+		
+		// Allow each Critter to do timestep (move, reproduce, etc.)
 		for (Critter currCritter : population) {
 			currCritter.doTimeStep();
 		}
+		
+		// Add Critters with same position into one array list
+		ArrayList<Critter> conflict = new ArrayList<Critter>();
+		for (int slow = 0; slow < population.size(); slow++) {
+			Critter crit1 = population.get(slow);
+			for (int fast = slow + 1; fast < population.size(); fast++) {
+				Critter crit2 = population.get(fast);
+				
+				if (samePosition(crit1, crit2)) {
+					if (!conflict.contains(crit1)) {
+						conflict.add(crit1);
+					}
+					if (!conflict.contains(crit2)) {
+						conflict.add(crit2);
+					}
+				}
+				
+			}
+		}
+		
+		// Resolve conflict
+		for (int ind = 0; ind < conflict.size(); ind++) {
+			int crit1Roll, crit2Roll;								// What each creature rolls
+			boolean crit1Removed = false, crit2Removed = false;		// Facilitates indexing
+			List<Critter> toRemove = new ArrayList<Critter>();		// Which creatures have died
+			int slow = 0, fast = 0;									// Pointers into population
+			while (slow < conflict.size()) {
+				Critter crit1 = conflict.get(slow);
+				fast = slow + 1;
+				while (fast < conflict.size()) {
+					crit1Removed = false;
+					crit2Removed = false;
+					Critter crit2 = conflict.get(fast);
+					
+					// If two creatures are in the same position
+					if (samePosition(crit1, crit2)) {
+						// Invoke both fights to determine Critters' intentions
+						boolean crit1Fight = crit1.fight(crit2.toString());
+						boolean crit2Fight = crit2.fight(crit1.toString());
+					
+						// After fight() invoked, both Critters are still alive and in same position
+						if ((crit1.energy > 0) && (crit2.energy > 0) && samePosition(crit1, crit2)) {						
+							if (!crit1Fight) {	// crit1 did not intend to fight
+								crit1Roll = 0;
+							} else {			// crit1 did intend to fight
+								crit1Roll = getRandomInt(crit1.energy);	// Random # between 0 and crit1.energy
+							}
+							
+							if (!crit2Fight) {	// crit2 did not intend to fight
+								crit2Roll = 0;
+							} else {			// crit2 did intend to fight
+								crit2Roll = getRandomInt(crit2.energy);	// Random # between 0 and crit2.energy
+							}
+							
+							// crit1 won the fight
+							// If rolls are equal, crit1 arbitrarily wins
+							if (crit1Roll >= crit2Roll) {
+								crit1.energy += (Math.floor(crit2.energy / 2));	// Half of loser's energy goes to winner
+								crit2.energy = 0;	// crit2 has no energy
+								crit2Removed = true;
+							}
+							
+							// crit2 won the fight
+							if (crit2Roll > crit1Roll) {
+								crit2.energy += (Math.floor(crit1.energy / 2));	//Half of loser's energy goes to winner
+								crit1.energy = 0;	// crit1 has no energy
+								crit1Removed = true;
+							}
+						}
+	
+						// crit1 energy depleted
+						if (crit1.energy <= 0) {
+							toRemove.add(crit1);
+							conflict.remove(crit1);		// Remove from population
+						}
+							
+						// crit2 energy depleted
+						if (crit2.energy <= 0) {
+							toRemove.add(crit2);
+							conflict.remove(crit2);		// Remove from population
+						}
+						
+						// Take care of indices after removing elements
+						if (crit1Removed || crit2Removed) {
+							slow = 0;
+							fast = slow;
+						}
+						
+					}
+					fast++;
+				}	
+				slow++;
+			}		
+			population.removeAll(toRemove);		// Remove Critters who have died
+		}
+		// TODO: remove once done testing
+		for (int lag = 0; lag < population.size(); lag++) {
+			Critter crit1 = population.get(lag);
+			for (int lead = lag + 1; lead < population.size(); lead++) {
+				Critter crit2 = population.get(lead);
+				if (samePosition(crit1, crit2)) {
+					System.out.println("We got a problem!");
+				}
+			}
+		}
+		
+		// Update rest energy
+		List<Critter> toRemove = new ArrayList<Critter>();
+		for (Critter currCritter : population) {
+			currCritter.energy -= Params.rest_energy_cost;
+			if (currCritter.energy <= 0) {
+				toRemove.add(currCritter);
+			}
+		}
+		population.removeAll(toRemove);
 	}
 	
 	public static void displayWorld() {
@@ -332,5 +461,6 @@ public abstract class Critter {
 			System.out.print("-");
 		}
 		System.out.println("+");
+		System.out.println(population.size());		//TODO: Remove when done testing
 	}
 }
