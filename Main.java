@@ -9,6 +9,9 @@ package assignment4;
  * Fall 2016
  */
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.ListIterator;
 import java.util.Scanner;
 import java.io.*;
 
@@ -72,50 +75,82 @@ public class Main {
         // TODO: remove in Stage 3
         // Create 100 Algae and 25 Craig
         try {
-        	/*
-        	for (int i = 0; i < 20; i++) {
+        	
+        	for (int i = 0; i < 5; i++) {
         		Critter.makeCritter("assignment4.Algae");
         	}
-        	*/
-        	for (int i = 0; i < 50; i++) {
+        	
+        	/*
+        	for (int i = 0; i < 10; i++) {
         		Critter.makeCritter("assignment4.Craig");
         	}
+        	*/
+        	
+        	for (int i = 0; i < 5; i++) {
+        		Critter.makeCritter("assignment4.Critter1");
+        	}
+        	
+        	
+        	for (int i = 0; i < 20; i++) {
+        		Critter.makeCritter("assignment4.Critter2");
+        	}
+        	
         } catch (InvalidCritterException e) {
         	System.out.println("Oops, something went wrong");
         }
         
         while (true) {
         	String rawCmd = kb.nextLine();
-        	String[] input = rawCmd.trim().split("\\s+");
+        	String[] inputArr = rawCmd.trim().split("\\s+");
+        	ArrayList<String> input = new ArrayList<String>(Arrays.asList(inputArr));
+        	ListIterator<String> params = input.listIterator();
+        	String cmd = null;
+        	
+        	if (params.hasNext()) {
+        		cmd = params.next();
+        	}
         	
         	// "quit" command terminates simulation
-        	if (input[0].equals("quit")) {
+        	if (cmd.equals("quit")) {
         		break;
         	}
         	
         	// "show" command displays 2D grid
-        	else if (input[0].equals("show")) {
+        	else if (cmd.equals("show")) {
         		Critter.displayWorld();
         	}
         	
         	// "step <count>" command performs specified number of world time steps
-        	// TODO: take care of <count> argument in Stage 2
-        	else if (input[0].equals("step")) {
-        		Critter.worldTimeStep();
+        	else if (cmd.equals("step")) {
+        		int count = 1;
+        		// TODO: exception handling for when not int?
+        		if (params.hasNext()) {
+        			count = Integer.parseInt(params.next());
+        		}
+        		for (int stepCnt = 0; stepCnt < count; stepCnt++) {
+        			Critter.worldTimeStep();
+        		}
+            	// TODO: need exception handling for additional inputs?
+
         	}
         	
-        	// TODO: "seed" is Stage 2
-        	else if (input[0].equals("seed")) {
+        	// "seed <number>" allows user to provide random number seed
+        	else if (cmd.equals("seed")) {
+        		// TODO: exception handling for when not long?
+        		if (params.hasNext()) {
+        			Critter.setSeed(Long.parseLong(params.next()));
+        		}
+        		// TODO: need exception handling for additional inputs?
         		
         	}
         	
         	// TODO: "make" is Stage 3. For 1 and 2, main() makes 100 Algae and 25 Craigs.
-        	else if (input[0].equals("make")) {
+        	else if (cmd.equals("make")) {
         		
         	}
         	
         	// TODO: "stats" is Stage 3
-        	else if (input[0].equals("stats")) {
+        	else if (cmd.equals("stats")) {
         		
         	}
         	
@@ -124,14 +159,6 @@ public class Main {
         		break;
         	}
         }
-
-        
-        /*
-        for (int i = 0; i < 10; i++) {
-            Critter.displayWorld();
-            Critter.worldTimeStep();
-        }
-        */
         
         /* Write your code above */
         System.out.flush();

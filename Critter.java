@@ -67,7 +67,7 @@ public abstract class Critter {
 			this.y_coord = this.y_coord - Params.world_height;
 		}
 	}
-	
+		
 	protected final void walk(int direction) {
 		// Critter kills himself trying to walk (not enough energy)
 		// TODO: check it <= is correct, or maybe just < and add = somewhere else
@@ -163,6 +163,55 @@ public abstract class Critter {
 	}
 	
 	protected final void reproduce(Critter offspring, int direction) {
+		// Check if parent has enough energy to reproduce
+		if (this.energy < Params.min_reproduce_energy) {
+			return;
+		}
+		
+		// Offspring gets 1/2 of parent's energy
+		offspring.energy = (int) (Math.floor(this.energy / 2));
+		this.energy = (int) (Math.ceil(this.energy / 2));
+		
+		// Assign offspring's position
+		switch (direction) {
+			case 0:
+				offspring.x_coord = this.x_coord + 1;
+				offspring.y_coord = this.y_coord;
+				break;
+			case 1:
+				offspring.x_coord = this.x_coord + 1;
+				offspring.y_coord = this.y_coord - 1;
+				break;
+			case 2: 
+				offspring.x_coord = this.x_coord; 
+				offspring.y_coord = this.y_coord - 1;
+				break;
+			case 3:
+				offspring.x_coord = this.x_coord - 1;
+				offspring.y_coord = this.y_coord - 1;
+				break;
+			case 4:
+				offspring.x_coord = this.x_coord - 1;
+				offspring.y_coord = this.y_coord;
+				break;
+			case 5:
+				offspring.x_coord = this.x_coord - 1;
+				offspring.y_coord = this.y_coord + 1;
+				break;
+			case 6:
+				offspring.x_coord = this.x_coord;
+				offspring.y_coord = this.y_coord + 1;
+				break;
+			case 7:
+				offspring.x_coord = this.x_coord + 1;
+				offspring.y_coord = this.y_coord + 1;
+				break;
+			default:
+				break;
+		}
+		
+		// Add to babies array list
+		babies.add(offspring);
 	}
 
 	public abstract void doTimeStep();
@@ -420,6 +469,20 @@ public abstract class Critter {
 			}
 		}
 		population.removeAll(toRemove);
+		
+		// Generate Algae
+		/*
+		try {
+			for (int i = 0; i < Params.refresh_algae_count; i++) {
+				Critter.makeCritter("assignment4.Algae");
+			}
+		} catch (InvalidCritterException e) {
+        	System.out.println("Oops, something went wrong");
+        }
+		*/
+		// Move babies to general population
+		population.addAll(babies);
+		babies.clear();
 	}
 	
 	public static void displayWorld() {
