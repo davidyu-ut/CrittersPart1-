@@ -68,55 +68,151 @@ public abstract class Critter {
 		}
 	}
 		
+	private ArrayList<Integer> calculatePos (Critter crit, int direction, String move) {
+		ArrayList<Integer> xyPair = new ArrayList<Integer>();
+		int x0 = crit.x_coord;
+		int y0 = crit.y_coord;
+		int xf = 0, yf = 0;
+		int increment = 1;
+		
+		// Increment changes depending on walk/move
+		if (move.equals("walk")) {
+			increment = 1;
+		} else if (move.equals("run")) {
+			increment = 2;
+		}
+		
+		switch (direction) {
+			case 0:		// Move east
+				xf = this.x_coord + increment;
+				yf = this.y_coord;
+				break;
+			case 1: 	// Move north-east
+				xf = this.x_coord + increment;
+				yf = this.y_coord - increment;
+				break;
+			case 2:		// Move north
+				xf = this.x_coord;
+				yf = this.y_coord - increment;
+				break;
+			case 3:		// Move north-west
+				xf = this.x_coord - increment;
+				yf = this.y_coord - increment;
+				break;
+			case 4:		// Move west
+				xf = this.x_coord - increment;
+				yf = this.y_coord;
+				break;
+			case 5:		// Move south-west
+				xf = this.x_coord - increment;
+				yf = this.y_coord - increment;
+				break;
+			case 6:		// Move south
+				xf = this.x_coord;
+				yf = this.y_coord + increment;
+				break;
+			case 7:		// south-east
+				xf = this.x_coord + increment;
+				yf = this.y_coord + increment;
+				break;
+			default:
+				break;
+		}
+		
+		// Readjust positions if out of bounds
+		// Right wraps around to left
+		if (xf > (Params.world_width - 1)) {
+			xf = xf - Params.world_width;
+		}
+		// Left wraps around to right
+		if (xf < 0) {
+			xf = Params.world_width + xf;
+		}
+		// Up wraps around to down
+		if (yf < 0) {
+			yf = Params.world_height + yf;
+		}
+		// Down wraps around to up
+		if (yf > (Params.world_height - 1)) {
+			yf = yf - Params.world_height;
+		}
+		
+		xyPair.add(xf);
+		xyPair.add(yf);
+		return xyPair;
+	}
+	
 	protected final void walk(int direction) {
+		ArrayList<Integer> xyPair;
+		
+		// If this is called from fight(), make sure we don't move to position that already has Critter on it
+		Throwable t = new Throwable();
+		StackTraceElement[] elements = t.getStackTrace();
+		String callerMethodName = elements[1].getMethodName();
+		
+		this.energy -= Params.walk_energy_cost;
+		if (callerMethodName.equals("fight")) {
+			xyPair = calculatePos(this, direction, "walk");	// Determine attempted final position
+			int attemptedX = xyPair.get(0);		
+			int attemptedY = xyPair.get(1);
+			// Check that attempted position does not have another Critter on it
+			for (Critter currCritter : population) {
+				// TODO: check if the comparison b/w currCrutter and this is correct
+				if (((currCritter.x_coord == attemptedX) && (currCritter.y_coord == attemptedY)) && (currCritter != this)) {
+					return;		// Do not walk to new position if occupied by another Critter
+				}
+			}
+			this.x_coord = attemptedX;
+			this.y_coord = attemptedY;
+			// readjust();
+			return;
+		}
+		
 		// Critter kills himself trying to walk (not enough energy)
 		// TODO: check it <= is correct, or maybe just < and add = somewhere else
 		if ((this.energy - Params.walk_energy_cost) <= 0) {
 			this.energy = 0;
-			population.remove(this);	// remove from population
+			population.remove(this);	// remove from population, TODO: probably don't want to do this here
 			return;
 		}
 		// Critter successfully walks
 		else {
 			this.energy -= Params.walk_energy_cost;		// Update energy cost
-			switch (direction) {
-			case 0:		// Move east
-				this.x_coord++;
-				break;
-			case 1: 	// Move north-east
-				this.x_coord++;
-				this.y_coord--;
-				break;
-			case 2:		// Move north
-				this.y_coord--;
-				break;
-			case 3:		// Move north-west
-				this.x_coord--;
-				this.y_coord--;
-				break;
-			case 4:		// Move west
-				this.x_coord--;
-				break;
-			case 5:		// Move south-west
-				this.x_coord--;
-				this.y_coord++;
-				break;
-			case 6:		// Move south
-				this.y_coord++;
-				break;
-			case 7:		// south-east
-				this.x_coord++;
-				this.y_coord++;
-				break;
-			default:
-				break;
-			}
+
+			xyPair = calculatePos(this, direction, "walk");	// Determine final position
+			this.x_coord = xyPair.get(0);	// Update x-coordinate
+			this.y_coord = xyPair.get(1);	// Update y-coordinate
 			
-			readjust();		// If critter is out of bounds, wrap around grid
+			// readjust();		// If critter is out of bounds, wrap around grid
 		}
 	}
 	
 	protected final void run(int direction) {
+		ArrayList<Integer> xyPair;
+		
+		// If this is called from fight(), make sure we don't move to position that already has Critter on it
+		Throwable t = new Throwable();
+		StackTraceElement[] elements = t.getStackTrace();
+		String callerMethodName = elements[1].getMethodName();
+		
+		this.energy -= Params.run_energy_cost;
+		if (callerMethodName.equals("fight")) {
+			xyPair = calculatePos(this, direction, "run");	// Determine attempted final position
+			int attemptedX = xyPair.get(0);
+			int attemptedY = xyPair.get(1);
+			// Check that attempted position does not have another Critter on it
+			for (Critter currCritter : population) {
+				// TODO: check if the comparison b/w currCrutter and this is correct
+				if (((currCritter.x_coord == attemptedX) && (currCritter.y_coord == attemptedY)) && (currCritter != this)) {
+					return;		// Do not walk to new position if occupied by another Critter
+				}
+			}
+			this.x_coord = attemptedX;
+			this.y_coord = attemptedY;
+			// readjust();
+			return;
+		}
+		
 		// Critter kills himself trying to run (not enough energy)
 		if ((this.energy - Params.run_energy_cost) < 0) {
 			this.energy = 0;
@@ -125,40 +221,12 @@ public abstract class Critter {
 		// Critter successfully runs
 		else {
 			this.energy -= Params.run_energy_cost;		// Update energy cost
-			switch (direction) {
-			case 0:		// Move east
-				this.x_coord += 2;
-				break;
-			case 1: 	// Move north-east
-				this.x_coord += 2;
-				this.y_coord -= 2;
-				break;
-			case 2:		// Move north
-				this.y_coord -= 2;
-				break;
-			case 3:		// Move north-west
-				this.x_coord -= 2;
-				this.y_coord -= 2;
-				break;
-			case 4:		// Move west
-				this.x_coord -= 2;
-				break;
-			case 5:		// Move south-west
-				this.x_coord -= 2;
-				this.y_coord += 2;
-				break;
-			case 6:		// Move south
-				this.y_coord += 2;
-				break;
-			case 7:		// south-east
-				this.x_coord += 2;
-				this.y_coord += 2;
-				break;
-			default:
-				break;
-			}
+
+			xyPair = calculatePos(this, direction, "run");	// Determine final position
+			this.x_coord = xyPair.get(0);	// Update x-coordinate
+			this.y_coord = xyPair.get(1);	// Update y-coordinate
 			
-			readjust();		// If critter is out of bounds, wrap around grid
+			// readjust();		// If critter is out of bounds, wrap around grid
 		}
 	}
 	
@@ -251,6 +319,13 @@ public abstract class Critter {
 	public static List<Critter> getInstances(String critter_class_name) throws InvalidCritterException {
 		List<Critter> result = new java.util.ArrayList<Critter>();
 	
+		for (Critter currCritter : population) {
+			Class cls = currCritter.getClass();
+			if (critter_class_name.equals(cls.getSimpleName())) {
+				result.add(currCritter);
+			}
+		}
+		
 		return result;
 	}
 	
@@ -349,7 +424,7 @@ public abstract class Critter {
 		// Complete this method.
 		
 		//TODO: increment (aka keep track of) timestep??
-		
+		// TODO: exception handling if no critters alive??
 		// Allow each Critter to do timestep (move, reproduce, etc.)
 		for (Critter currCritter : population) {
 			currCritter.doTimeStep();

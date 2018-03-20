@@ -2,7 +2,8 @@ package assignment4;
 
 // Predatory critter
 public class Critter1 extends Critter {
-	private int origin;
+	private int origin;											// Indicates originating direction to prevent backtracking
+	private static int highestEnergy = Params.start_energy;		// Holds record for highest energy
 	
 	public Critter1() {
 		// Pick random direction we don't go towards upon first creation
@@ -13,7 +14,12 @@ public class Critter1 extends Critter {
 	@Override
 	public void doTimeStep() {
 		int currEnergy = this.getEnergy();
-		int moveDir = Critter.getRandomInt(8);
+		int moveDir = Critter.getRandomInt(8);	
+		
+		// Check if highest energy record has been broken
+		if (this.getEnergy() > highestEnergy) {
+			highestEnergy = this.getEnergy();
+		}
 		
 		// Don't attempt to move in direction we came from (don't backtrack)
 		while (moveDir == origin) {
@@ -60,5 +66,18 @@ public class Critter1 extends Critter {
 	
 	public String toString() {
 		return "P";
+	}
+	
+	// Shows current # of Critter1's on board and total number of kills
+	public static void runStats(java.util.List<Critter> critter1s) {
+		int avgEnergy = 0;
+		for (Object obj : critter1s) {
+			Critter1 currCritter1 = (Critter1) obj;
+			avgEnergy += currCritter1.getEnergy();
+		}
+		avgEnergy = avgEnergy / critter1s.size();
+		System.out.println(critter1s.size() + " total Critter1s");
+		System.out.println("Average energy of current Critter1s: " + avgEnergy);
+		System.out.println("Highest energy record: " + highestEnergy);
 	}
 }

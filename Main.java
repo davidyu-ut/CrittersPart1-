@@ -11,7 +11,9 @@ package assignment4;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.io.*;
 
@@ -74,17 +76,18 @@ public class Main {
         
         // TODO: remove in Stage 3
         // Create 100 Algae and 25 Craig
+        /*
         try {
         	
         	for (int i = 0; i < 5; i++) {
         		Critter.makeCritter("assignment4.Algae");
         	}
         	
-        	/*
+        	
         	for (int i = 0; i < 10; i++) {
         		Critter.makeCritter("assignment4.Craig");
         	}
-        	*/
+        	
         	
         	for (int i = 0; i < 5; i++) {
         		Critter.makeCritter("assignment4.Critter1");
@@ -98,6 +101,7 @@ public class Main {
         } catch (InvalidCritterException e) {
         	System.out.println("Oops, something went wrong");
         }
+        */
         
         while (true) {
         	String rawCmd = kb.nextLine();
@@ -112,51 +116,162 @@ public class Main {
         	
         	// "quit" command terminates simulation
         	if (cmd.equals("quit")) {
+        		// Additional parameters considered parsing error
+        		if (params.hasNext()) {
+        			System.out.print("invalid command: " + cmd);
+        			while (params.hasNext()) {
+        				System.out.print(" " + params.next());
+            		}
+            		System.out.print("\n");
+            		continue;
+        		}
+        		
         		break;
         	}
         	
         	// "show" command displays 2D grid
         	else if (cmd.equals("show")) {
+        		// Additional parameters considered parsing error
+        		if (params.hasNext()) {
+        			System.out.print("invalid command: " + cmd);
+        			while (params.hasNext()) {
+        				System.out.print(" " + params.next());
+            		}
+            		System.out.print("\n");
+            		continue;
+        		}
+        		
         		Critter.displayWorld();
         	}
         	
         	// "step <count>" command performs specified number of world time steps
         	else if (cmd.equals("step")) {
         		int count = 1;
-        		// TODO: exception handling for when not int?
+        		// Check if we are given an int
         		if (params.hasNext()) {
-        			count = Integer.parseInt(params.next());
+        			String stepNum = params.next();
+        			try {
+        				count = Integer.parseInt(stepNum);
+        			} catch (NumberFormatException e) {
+        				System.out.print("error processing: " + cmd + " " + stepNum);
+        				while (params.hasNext()) {
+        					System.out.print(" " + params.next());
+                		}
+                		System.out.print("\n");
+                		continue;
+        			}
         		}
         		for (int stepCnt = 0; stepCnt < count; stepCnt++) {
         			Critter.worldTimeStep();
         		}
-            	// TODO: need exception handling for additional inputs?
-
         	}
         	
         	// "seed <number>" allows user to provide random number seed
         	else if (cmd.equals("seed")) {
-        		// TODO: exception handling for when not long?
+        		// Check if we are given a long
         		if (params.hasNext()) {
-        			Critter.setSeed(Long.parseLong(params.next()));
+        			String seedNum = params.next();
+        			try {
+        				Critter.setSeed(Long.parseLong(seedNum));
+        			} catch (NumberFormatException e) {
+        				System.out.print("error processing: " + cmd + " " + seedNum);
+        				while (params.hasNext()) {
+        					System.out.print(" " + params.next());
+                		}
+                		System.out.print("\n");
+                		continue;
+        			}
         		}
-        		// TODO: need exception handling for additional inputs?
-        		
         	}
         	
-        	// TODO: "make" is Stage 3. For 1 and 2, main() makes 100 Algae and 25 Craigs.
+        	// "make" command creates specified type and number of Critters
         	else if (cmd.equals("make")) {
+        		String className = null;
         		
+        		// When no class name given
+        		try {
+        			className = params.next();
+        		} catch (NoSuchElementException e) {
+        			System.out.println("error processing: " + cmd);
+        			continue;
+        		}
+        		
+        		int count = 1;
+        		// Check if we are given an int
+        		if (params.hasNext()) {
+        			String makeNum = params.next();
+        			try {
+        				count = Integer.parseInt(makeNum);
+        			} catch (NumberFormatException e) {
+        				System.out.print("error processing: " + cmd + " " + className + " " + makeNum);
+        				while (params.hasNext()) {
+        					System.out.print(" " + params.next());
+                		}
+                		System.out.print("\n");
+                		continue;
+        			}
+        		}
+        		
+        		// Incorrect Critter name
+        		try {
+            		for (int makeCnt = 0; makeCnt < count; makeCnt++) {
+            			Critter.makeCritter("assignment4." + className);
+            		}
+        		} catch (InvalidCritterException e) {
+        			System.out.print("error processing: " + cmd + " " + className);
+    				while (params.hasNext()) {
+    					System.out.print(" " + params.next());
+            		}
+            		System.out.print("\n");
+            		continue;
+                }
         	}
         	
-        	// TODO: "stats" is Stage 3
+        	// "stats" command gives specific statistics about type of Critter
         	else if (cmd.equals("stats")) {
+        		String className = null;
+        		
+        		// When no class name given
+        		try {
+        			className = params.next();
+        		} catch (NoSuchElementException e) {
+        			System.out.println("error processing: " + cmd);
+        			continue;
+        		}
+        		
+        		// Call specific Critter's runStats method
+        		try {    		
+        			List<Critter> instances;
+        			java.lang.reflect.Method method;
+        			instances = Critter.getInstances(className);	// Get instances of specified class			
+        			Class critter = Class.forName("assignment4." + className);
+        			Critter dummyCritter = (Critter)critter.newInstance();
+
+        			// Use reflection to call custom Critter's runStats() method
+        			Class[] cArg = new Class[1];
+        			cArg[0] = List.class;
+        			method = dummyCritter.getClass().getMethod("runStats", cArg);
+        			method.invoke(dummyCritter, instances);
+        			
+        		} catch (Exception e) {
+    				System.out.print("error processing: " + cmd + " " + className);
+    				while (params.hasNext()) {
+    					System.out.print(" " + params.next());
+            		}
+            		System.out.print("\n");
+            		continue;
+        		}
+        		
         		
         	}
         	
-        	// TODO: Invalid command handling
+        	// Invalid command
         	else {
-        		break;
+        		System.out.print("invalid command: " + cmd);
+        		while (params.hasNext()) {
+        			System.out.print(" " + params.next());
+        		}
+        		System.out.print("\n");
         	}
         }
         
