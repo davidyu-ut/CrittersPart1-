@@ -6,7 +6,7 @@ package assignment4;
  * dy3834
  * 15460
  * Slip days used: <0>
- * Fall 2016
+ * Spring 2018
  */
 
 import java.util.ArrayList;
@@ -71,39 +71,12 @@ public class Main {
 
         /* Do not alter the code above for your submission. */
         /* Write your code below. */
-        
-        System.out.println("GLHF");
-        
-        // TODO: remove in Stage 3
-        // Create 100 Algae and 25 Craig
-        /*
-        try {
-        	
-        	for (int i = 0; i < 5; i++) {
-        		Critter.makeCritter("assignment4.Algae");
-        	}
-        	
-        	
-        	for (int i = 0; i < 10; i++) {
-        		Critter.makeCritter("assignment4.Craig");
-        	}
-        	
-        	
-        	for (int i = 0; i < 5; i++) {
-        		Critter.makeCritter("assignment4.Critter1");
-        	}
-        	
-        	
-        	for (int i = 0; i < 20; i++) {
-        		Critter.makeCritter("assignment4.Critter2");
-        	}
-        	
-        } catch (InvalidCritterException e) {
-        	System.out.println("Oops, something went wrong");
-        }
-        */
-        
+
+        // Continue excecuting commands until "quit" command issued
         while (true) {
+        	// Print prompt
+        	System.out.print("critters>");
+        	
         	String rawCmd = kb.nextLine();
         	String[] inputArr = rawCmd.trim().split("\\s+");
         	ArrayList<String> input = new ArrayList<String>(Arrays.asList(inputArr));
@@ -150,6 +123,18 @@ public class Main {
         		// Check if we are given an int
         		if (params.hasNext()) {
         			String stepNum = params.next();
+        			
+        			// Error handling for additional parameters
+            		if (params.hasNext()) {
+            			System.out.print("invalid command: " + cmd + " " + stepNum);
+            			while (params.hasNext()) {
+            				System.out.print(" " + params.next());
+                		}
+                		System.out.print("\n");
+                		continue;
+            		}
+        			
+            		// Error handling for step argument not being an integer
         			try {
         				count = Integer.parseInt(stepNum);
         			} catch (NumberFormatException e) {
@@ -171,6 +156,18 @@ public class Main {
         		// Check if we are given a long
         		if (params.hasNext()) {
         			String seedNum = params.next();
+        			
+        			// Error handling for additional parameters
+            		if (params.hasNext()) {
+            			System.out.print("invalid command: " + cmd + " " + seedNum);
+            			while (params.hasNext()) {
+            				System.out.print(" " + params.next());
+                		}
+                		System.out.print("\n");
+                		continue;
+            		}
+        			
+            		// Error handling for seed not being a long
         			try {
         				Critter.setSeed(Long.parseLong(seedNum));
         			} catch (NumberFormatException e) {
@@ -188,43 +185,56 @@ public class Main {
         	else if (cmd.equals("make")) {
         		String className = null;
         		
+        		ArrayList<String> paramArr = new ArrayList<String>();
+        		while (params.hasNext()) {
+        			paramArr.add(params.next());
+        		}
+        		
         		// When no class name given
-        		try {
-        			className = params.next();
-        		} catch (NoSuchElementException e) {
+        		if (paramArr.isEmpty()) {
         			System.out.println("error processing: " + cmd);
         			continue;
         		}
-        		
+        		className = paramArr.get(0);
+
         		int count = 1;
+        		
         		// Check if we are given an int
-        		if (params.hasNext()) {
-        			String makeNum = params.next();
-        			try {
-        				count = Integer.parseInt(makeNum);
-        			} catch (NumberFormatException e) {
-        				System.out.print("error processing: " + cmd + " " + className + " " + makeNum);
-        				while (params.hasNext()) {
-        					System.out.print(" " + params.next());
-                		}
-                		System.out.print("\n");
-                		continue;
+        		try {
+        			count = Integer.parseInt(paramArr.get(1));
+        		} catch (NumberFormatException | IndexOutOfBoundsException e) {
+        			System.out.print("error processing: " + cmd);
+        			for (String badParam : paramArr) {
+        				System.out.print(" " + badParam);
         			}
+            		System.out.print("\n");
+            		continue;
+        		}
+        		
+        		// Exception handling for additional parameters
+        		if (paramArr.size() > 2) {
+        			System.out.print("error processing: " + cmd);
+        			for (String badParam : paramArr) {
+        				System.out.print(" " + badParam);
+        			}
+            		System.out.print("\n");
+            		continue;
         		}
         		
         		// Incorrect Critter name
         		try {
             		for (int makeCnt = 0; makeCnt < count; makeCnt++) {
-            			Critter.makeCritter("assignment4." + className);
+            			Critter.makeCritter(className);
             		}
         		} catch (InvalidCritterException e) {
-        			System.out.print("error processing: " + cmd + " " + className);
-    				while (params.hasNext()) {
-    					System.out.print(" " + params.next());
-            		}
+        			System.out.print("error processing: " + cmd);
+        			for (String badParam : paramArr) {
+        				System.out.print(" " + badParam);
+        			}
             		System.out.print("\n");
             		continue;
                 }
+                
         	}
         	
         	// "stats" command gives specific statistics about type of Critter
@@ -237,6 +247,16 @@ public class Main {
         		} catch (NoSuchElementException e) {
         			System.out.println("error processing: " + cmd);
         			continue;
+        		}
+        		
+    			// Error handling for additional parameters
+        		if (params.hasNext()) {
+        			System.out.print("invalid command: " + cmd + " " + className);
+        			while (params.hasNext()) {
+        				System.out.print(" " + params.next());
+            		}
+            		System.out.print("\n");
+            		continue;
         		}
         		
         		// Call specific Critter's runStats method

@@ -1,13 +1,33 @@
 package assignment4;
+/* CRITTERS Critter2.java
+ * EE422C Project 4 submission by
+ * Replace <...> with your actual data.
+ * David Yu
+ * dy3834
+ * 15460
+ * Slip days used: <0>
+ * Spring 2018
+ */
 
-// smart critter
+/**
+ * Critter2 is classified as a passive/reactive Critter. It only moves when
+ * low on energy to look for Algae or to run during a fight. Critter2 reproduces
+ * if it gained energy in the last time step (ate Algae). It is represented by
+ * an "S" on the grid.
+ * 
+ * @author David Yu
+ *
+ */
 public class Critter2 extends Critter {
-	private int prevEnergy;
-	private boolean movedThisStep;
-	private boolean walked;
-	private boolean ran;
-	private static int numChildren;
+	private int prevEnergy;				// Energy during last time step
+	private boolean movedThisStep;		// Indicates if it moved already during this time step
+	private boolean walked;				// Indicates if it walked in the previous time step
+	private boolean ran;				// Indicates if it ran in the previous time step
+	private static int numChildren;		// Number of times reproduced
 	
+	/**
+	 * Basic constructor initializes movement indicators to false
+	 */
 	public Critter2() {
 		prevEnergy = Params.start_energy;
 		movedThisStep = false;
@@ -16,6 +36,11 @@ public class Critter2 extends Critter {
 	}
 	
 	@Override
+	/**
+	 * In Critter2's timestep, it reproduces if it gained energy in the previous
+	 * time step (accounting for rest/movement energy cost). If on low energy
+	 * (less than 50% of starting), it moves in search of Algae.
+	 */
 	public void doTimeStep() {
 		movedThisStep = false;
 		// If we acquired energy in our previous time step, reproduce
@@ -53,6 +78,11 @@ public class Critter2 extends Critter {
 	}
 
 	@Override
+	/**
+	 * Critter2 only attempts to fight if its opponent is an Algae.
+	 * Critter2 will try to run from a fight if it has enough energy or
+	 * walk away from a fight if it has not yet moved in this time step.
+	 */
 	public boolean fight(String opponent) {
 		// Fight if opponent is Algae, or cannot move again (already moved this step)
 		if (opponent.equals("@") || movedThisStep) {
@@ -81,10 +111,18 @@ public class Critter2 extends Critter {
 		}
 	}
 	
+	/**
+	 * Critter2 represented by an "S" on the grid.
+	 */
 	public String toString() {
 		return "S";
 	}
 	
+	/**
+	 * runStats keeps track of how many times all instances of Critter2s
+	 * have reproduced in total.
+	 * @param critter2s contains all alive Critter2s
+	 */
 	public static void runStats(java.util.List<Critter> critter2s) {
 		int totNumChildren = 0;
 		for (Object obj : critter2s) {

@@ -6,11 +6,12 @@ package assignment4;
  * dy3834
  * 15460
  * Slip days used: <0>
- * Fall 2016
+ * Spring 2018
  */
 
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -19,7 +20,14 @@ import java.util.ListIterator;
  * no new public, protected or default-package code or data can be added to Critter
  */
 
-
+/**
+ * This abstract class contains the static variables and methods that all Critters
+ * must have. In order for a class to implement this one, it must define its own 
+ * doTimeStep() and fight() methods.
+ * 
+ * @author David Yu
+ *
+ */
 public abstract class Critter {
 	private static String myPackage;
 	private	static List<Critter> population = new java.util.ArrayList<Critter>();
@@ -31,10 +39,20 @@ public abstract class Critter {
 	}
 	
 	private static java.util.Random rand = new java.util.Random();
+	
+	/**
+	 * This method returns a random number
+	 * @param max is the largest you want the random number to be
+	 * @return a random number between 0 and max
+	 */
 	public static int getRandomInt(int max) {
 		return rand.nextInt(max);
 	}
 	
+	/**
+	 * This method sets the seed of the random number generator
+	 * @param new_seed is the seed
+	 */
 	public static void setSeed(long new_seed) {
 		rand = new java.util.Random(new_seed);
 	}
@@ -49,25 +67,17 @@ public abstract class Critter {
 	private int x_coord;
 	private int y_coord;
 	
-	private void readjust() {
-		// Right wraps around to left
-		if (this.x_coord > (Params.world_width - 1)) {
-			this.x_coord = this.x_coord - Params.world_width;
-		}
-		// Left wraps around to right
-		if (this.x_coord < 0) {
-			this.x_coord = Params.world_width + this.x_coord;
-		}
-		// Up wraps around to down
-		if (this.y_coord < 0) {
-			this.y_coord = Params.world_height + this.y_coord;
-		}
-		// Down wraps around to up
-		if (this.y_coord > (Params.world_height - 1)) {
-			this.y_coord = this.y_coord - Params.world_height;
-		}
-	}
-		
+	/**
+	 * This method calculates the expected position of a Critter after it either
+	 * walks or runs.
+	 * 
+	 * Note: This method does not directly alter the Critter's position, it just calculates it
+	 * 
+	 * @param crit is the specific Critter that is moving
+	 * @param direction is from 0-7 starting from the right and going CCW
+	 * @param move specifies whether the Critter is walking or running
+	 * @return an ArrayList containing the Critter's new X and Y coordinates
+	 */
 	private ArrayList<Integer> calculatePos (Critter crit, int direction, String move) {
 		ArrayList<Integer> xyPair = new ArrayList<Integer>();
 		int x0 = crit.x_coord;
@@ -142,6 +152,12 @@ public abstract class Critter {
 		return xyPair;
 	}
 	
+	/**
+	 * This method alters the location of the Critter by 1 unit if it has not moved yet
+	 * in this current time step
+	 * 
+	 * @param direction is the direction the Critter intends to move
+	 */
 	protected final void walk(int direction) {
 		ArrayList<Integer> xyPair;
 		
@@ -157,36 +173,36 @@ public abstract class Critter {
 			int attemptedY = xyPair.get(1);
 			// Check that attempted position does not have another Critter on it
 			for (Critter currCritter : population) {
-				// TODO: check if the comparison b/w currCrutter and this is correct
 				if (((currCritter.x_coord == attemptedX) && (currCritter.y_coord == attemptedY)) && (currCritter != this)) {
 					return;		// Do not walk to new position if occupied by another Critter
 				}
 			}
 			this.x_coord = attemptedX;
 			this.y_coord = attemptedY;
-			// readjust();
+			
 			return;
 		}
 		
 		// Critter kills himself trying to walk (not enough energy)
-		// TODO: check it <= is correct, or maybe just < and add = somewhere else
 		if ((this.energy - Params.walk_energy_cost) <= 0) {
 			this.energy = 0;
-			population.remove(this);	// remove from population, TODO: probably don't want to do this here
 			return;
 		}
 		// Critter successfully walks
 		else {
-			this.energy -= Params.walk_energy_cost;		// Update energy cost
-
 			xyPair = calculatePos(this, direction, "walk");	// Determine final position
 			this.x_coord = xyPair.get(0);	// Update x-coordinate
 			this.y_coord = xyPair.get(1);	// Update y-coordinate
-			
-			// readjust();		// If critter is out of bounds, wrap around grid
+
 		}
 	}
 	
+	/**
+	 * This method alters the location of the Critter by 2 unit if it has not moved yet
+	 * in this current time step
+	 * 
+	 * @param direction
+	 */
 	protected final void run(int direction) {
 		ArrayList<Integer> xyPair;
 		
@@ -202,35 +218,39 @@ public abstract class Critter {
 			int attemptedY = xyPair.get(1);
 			// Check that attempted position does not have another Critter on it
 			for (Critter currCritter : population) {
-				// TODO: check if the comparison b/w currCrutter and this is correct
 				if (((currCritter.x_coord == attemptedX) && (currCritter.y_coord == attemptedY)) && (currCritter != this)) {
 					return;		// Do not walk to new position if occupied by another Critter
 				}
 			}
 			this.x_coord = attemptedX;
 			this.y_coord = attemptedY;
-			// readjust();
+
 			return;
 		}
 		
 		// Critter kills himself trying to run (not enough energy)
-		if ((this.energy - Params.run_energy_cost) < 0) {
+		if ((this.energy - Params.run_energy_cost) <= 0) {
 			this.energy = 0;
 			return;
 		}
 		// Critter successfully runs
 		else {
-			this.energy -= Params.run_energy_cost;		// Update energy cost
-
 			xyPair = calculatePos(this, direction, "run");	// Determine final position
 			this.x_coord = xyPair.get(0);	// Update x-coordinate
 			this.y_coord = xyPair.get(1);	// Update y-coordinate
 			
-			// readjust();		// If critter is out of bounds, wrap around grid
 		}
 	}
 	
+	/**
+	 * This method places the Critter's offspring onto the grid adjacent to its parent
+	 * 
+	 * @param offspring is the Critter to place
+	 * @param direction indicates where to place the Critter adjacent to parent
+	 */
 	protected final void reproduce(Critter offspring, int direction) {
+		ArrayList<Integer> xyPair;
+		
 		// Check if parent has enough energy to reproduce
 		if (this.energy < Params.min_reproduce_energy) {
 			return;
@@ -241,42 +261,9 @@ public abstract class Critter {
 		this.energy = (int) (Math.ceil(this.energy / 2));
 		
 		// Assign offspring's position
-		switch (direction) {
-			case 0:
-				offspring.x_coord = this.x_coord + 1;
-				offspring.y_coord = this.y_coord;
-				break;
-			case 1:
-				offspring.x_coord = this.x_coord + 1;
-				offspring.y_coord = this.y_coord - 1;
-				break;
-			case 2: 
-				offspring.x_coord = this.x_coord; 
-				offspring.y_coord = this.y_coord - 1;
-				break;
-			case 3:
-				offspring.x_coord = this.x_coord - 1;
-				offspring.y_coord = this.y_coord - 1;
-				break;
-			case 4:
-				offspring.x_coord = this.x_coord - 1;
-				offspring.y_coord = this.y_coord;
-				break;
-			case 5:
-				offspring.x_coord = this.x_coord - 1;
-				offspring.y_coord = this.y_coord + 1;
-				break;
-			case 6:
-				offspring.x_coord = this.x_coord;
-				offspring.y_coord = this.y_coord + 1;
-				break;
-			case 7:
-				offspring.x_coord = this.x_coord + 1;
-				offspring.y_coord = this.y_coord + 1;
-				break;
-			default:
-				break;
-		}
+		xyPair = calculatePos(this, direction, "walk");	// Determine attempted final position
+		offspring.x_coord = xyPair.get(0);
+		offspring.y_coord = xyPair.get(1);
 		
 		// Add to babies array list
 		babies.add(offspring);
@@ -297,12 +284,12 @@ public abstract class Critter {
 	 */
 	public static void makeCritter(String critter_class_name) throws InvalidCritterException {
 		try {
-			Class critter = Class.forName(critter_class_name);
+			Class critter = Class.forName("assignment4." + critter_class_name);
 			Critter newCritter = (Critter)critter.newInstance();
 			population.add(newCritter);	// Add newly created critter to population
 		
-			newCritter.x_coord = getRandomInt(Params.world_width - 1);	// Random x-coor
-			newCritter.y_coord = getRandomInt(Params.world_height - 1);	// Random y-coor
+			newCritter.x_coord = getRandomInt(Params.world_width);	// Random x-coor
+			newCritter.y_coord = getRandomInt(Params.world_height);	// Random y-coor
 			newCritter.energy = Params.start_energy;	// Initial energy
 			
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
@@ -405,6 +392,12 @@ public abstract class Critter {
 		}
 	}
 
+	/**
+	 * This method determines if two Critters occupy same location
+	 * @param crit1 is Critter 1
+	 * @param crit2 is Critter 2
+	 * @return true if they share the same location, false otherwise
+	 */
 	private static boolean samePosition(Critter crit1, Critter crit2) {
 		if ((crit1.x_coord == crit2.x_coord) && (crit1.y_coord == crit2.y_coord)) {
 			return true;
@@ -418,17 +411,32 @@ public abstract class Critter {
 	 */
 	public static void clearWorld() {
 		// Complete this method.
+		population.clear();
+		babies.clear();
 	}
 	
+	/**
+	 * This method is called every time the user orders the "step" command. It does the following:
+	 * 1. Increment the timestep
+	 * 2. doTimeStep() for each Critter
+	 * 3. Resolve the fights
+	 * 4. updateRestEnergy()
+	 * 5. Generate Algae
+	 * 6. Move babies to general population
+	 */
 	public static void worldTimeStep() {
-		// Complete this method.
 		
-		//TODO: increment (aka keep track of) timestep??
-		// TODO: exception handling if no critters alive??
 		// Allow each Critter to do timestep (move, reproduce, etc.)
+		List<Critter> notAlive = new ArrayList<Critter>();
 		for (Critter currCritter : population) {
-			currCritter.doTimeStep();
+			if (currCritter.energy > 0) {
+				currCritter.doTimeStep();
+			} else {
+				notAlive.add(currCritter);
+			}
 		}
+		
+		population.removeAll(notAlive);
 		
 		// Add Critters with same position into one array list
 		ArrayList<Critter> conflict = new ArrayList<Critter>();
@@ -524,16 +532,6 @@ public abstract class Critter {
 			}		
 			population.removeAll(toRemove);		// Remove Critters who have died
 		}
-		// TODO: remove once done testing
-		for (int lag = 0; lag < population.size(); lag++) {
-			Critter crit1 = population.get(lag);
-			for (int lead = lag + 1; lead < population.size(); lead++) {
-				Critter crit2 = population.get(lead);
-				if (samePosition(crit1, crit2)) {
-					System.out.println("We got a problem!");
-				}
-			}
-		}
 		
 		// Update rest energy
 		List<Critter> toRemove = new ArrayList<Critter>();
@@ -546,22 +544,23 @@ public abstract class Critter {
 		population.removeAll(toRemove);
 		
 		// Generate Algae
-		/*
 		try {
 			for (int i = 0; i < Params.refresh_algae_count; i++) {
-				Critter.makeCritter("assignment4.Algae");
+				Critter.makeCritter("Algae");
 			}
 		} catch (InvalidCritterException e) {
         	System.out.println("Oops, something went wrong");
         }
-		*/
+		
 		// Move babies to general population
 		population.addAll(babies);
 		babies.clear();
 	}
 	
+	/**
+	 * This method prints to standard output the grid and all alive Critters 
+	 */
 	public static void displayWorld() {
-		// Complete this method.
 		
 		// Initialize 2D grid with single space " "
 		String[][] grid = new String[Params.world_height][Params.world_width]; 
@@ -573,7 +572,6 @@ public abstract class Critter {
 		
 		// Place Critters on grid
 		for (Critter currCritter : population) {
-			// TODO: check if this access is correct
 			grid[currCritter.y_coord][currCritter.x_coord] = currCritter.toString();
 		}
 		
@@ -599,6 +597,5 @@ public abstract class Critter {
 			System.out.print("-");
 		}
 		System.out.println("+");
-		System.out.println(population.size());		//TODO: Remove when done testing
 	}
 }

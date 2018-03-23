@@ -1,10 +1,32 @@
 package assignment4;
+/* CRITTERS Critter1.java
+ * EE422C Project 4 submission by
+ * Replace <...> with your actual data.
+ * David Yu
+ * dy3834
+ * 15460
+ * Slip days used: <0>
+ * Spring 2018
+ */
 
-// Predatory critter
+/**
+ * Critter1 is classified as an aggressive/predatory Critter. It runs to search for prey if it has
+ * high energy (energy > (3*running_energy_cost)), walks if it has low energy, and remains dormant
+ * if it is about to run out of energy. Critter1 never backtracks.
+ * 
+ * Critter1 always returns true if given an opportunity to fight, but will reproduce during a fight 
+ * if it has less than 50% of starting energy. It is represented by a "P" on the grid.
+ * 
+ * @author David Yu
+ *
+ */
 public class Critter1 extends Critter {
 	private int origin;											// Indicates originating direction to prevent backtracking
 	private static int highestEnergy = Params.start_energy;		// Holds record for highest energy
 	
+	/**
+	 * Basic constructor initializes origin
+	 */
 	public Critter1() {
 		// Pick random direction we don't go towards upon first creation
 		origin = Critter.getRandomInt(8);
@@ -12,6 +34,11 @@ public class Critter1 extends Critter {
 	
 	
 	@Override
+	/**
+	 * In a timestep, Critter1 determines a random direction to move in order to
+	 * search for prey. However, it never goes back to the position it was just 
+	 * at (never backtracks). 
+	 */
 	public void doTimeStep() {
 		int currEnergy = this.getEnergy();
 		int moveDir = Critter.getRandomInt(8);	
@@ -44,6 +71,10 @@ public class Critter1 extends Critter {
 	}
 
 	@Override
+	/**
+	 * In its fight method, Critter1 reproduces before a fight if it has less than
+	 * 50% of its starting energy as a safety mechanism incase it loses the fight.
+	 */
 	public boolean fight(String opponent) {
 		// Opponent is Algae
 		if (opponent.equals("@")) {
@@ -64,11 +95,19 @@ public class Critter1 extends Critter {
 		return true;
 	}
 	
+	/**
+	 * Represented as a "P" on the grid.
+	 */
 	public String toString() {
 		return "P";
 	}
 	
-	// Shows current # of Critter1's on board and total number of kills
+	/**
+	 * runStats keeps track of the average energies of all alive Critter1s
+	 * and the record for the highest energy count.
+	 * 
+	 * @param critter1s contains all alive Critter1s
+	 */
 	public static void runStats(java.util.List<Critter> critter1s) {
 		int avgEnergy = 0;
 		for (Object obj : critter1s) {
