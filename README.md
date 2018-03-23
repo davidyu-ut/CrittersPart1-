@@ -1,5 +1,7 @@
 # CrittersPart1-
 
+Link to GitHub repo: https://github.com/davidyu-ut/CrittersPart1-.git
+
 Main.java
 This is the driver for this assignment. Recognized commands:
 quit - terminates the program
